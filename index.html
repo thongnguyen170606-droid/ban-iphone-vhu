@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>VHU - Cửa hàng iPhone Trực Tuyến</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f5f5f7;
+        }
+        
+        header {
+            background-color: #000;
+            color: #fff;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .admin-link {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            background: #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        /* Box Tìm kiếm */
+        
+        .search-box {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .search-box input {
+            width: 50%;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 30px;
+            outline: none;
+            transition: 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #0071e3;
+            box-shadow: 0 0 8px rgba(0, 113, 227, 0.3);
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .product-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .product-image {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            object-fit: contain;
+        }
+        
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .product-price {
+            color: #d70018;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .buy-btn {
+            background: #0071e3;
+            color: #fff;
+            border: none;
+            padding: 10px 0;
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 350px;
+        }
+        
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        .submit-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .close-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>VHU Apple Store</h1>
+        <a href="admin.html" class="admin-link" target="_blank">⚙️ Quản Trị Viên</a>
+    </header>
+
+    <div class="container">
+        <!-- Ô Tìm kiếm nâng cấp -->
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Nhập tên iPhone bạn muốn tìm " onkeyup="searchProduct()">
+        </div>
+
+        <div class="product-grid" id="productList"></div>
+    </div>
+
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">X</button>
+            <h3 style="margin-top:0;">Đặt Mua Sản Phẩm</h3>
+            <p id="selectedProduct" style="font-weight:bold; color:#0071e3;"></p>
+            <form id="orderForm">
+                <input type="text" id="custName" placeholder="Họ và tên của bạn" required>
+                <input type="tel" id="custPhone" placeholder="Số điện thoại" required>
+                <textarea id="custAddress" placeholder="Địa chỉ giao hàng" required></textarea>
+                <button type="submit" class="submit-btn">Xác Nhận Đặt Hàng</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentProduct = null;
+        let allProducts = []; // Biến lưu toàn bộ sản phẩm để làm chức năng tìm kiếm
+
+        // Hàm vẽ sản phẩm ra giao diện
+        function renderProducts(products) {
+            const list = document.getElementById('productList');
+            list.innerHTML = '';
+
+            if (products.length === 0) {
+                list.innerHTML = '<p style="text-align:center; width:100%;">Không tìm thấy sản phẩm nào!</p>';
+                return;
+            }
+
+            products.forEach(p => {
+                let priceFormatted = new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                }).format(p.price);
+                list.innerHTML += `
+                    <div class="product-card">
+                        <img src="${p.image}" class="product-image">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">${priceFormatted}</div>
+                        <button class="buy-btn" onclick='openModal(${JSON.stringify(p)})'>Mua Ngay</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Lấy dữ liệu từ Database
+        fetch('http://localhost:3000/api/products')
+            .then(res => res.json())
+            .then(products => {
+                allProducts = products; // Lưu lại để tìm kiếm
+                renderProducts(allProducts); // In ra lần đầu
+            });
+
+        // Hàm Xử lý Lọc/Tìm kiếm
+        function searchProduct() {
+            let keyword = document.getElementById('searchInput').value.toLowerCase();
+            let filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(keyword));
+            renderProducts(filteredProducts);
+        }
+
+        function openModal(product) {
+            currentProduct = product;
+            document.getElementById('selectedProduct').innerText = product.name + " - " + new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(product.price);
+            document.getElementById('orderModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const orderData = {
+                customer_name: document.getElementById('custName').value,
+                customer_phone: document.getElementById('custPhone').value,
+                customer_address: document.getElementById('custAddress').value,
+                product_name: currentProduct.name,
+                total_price: currentProduct.price
+            };
+
+            fetch('http://localhost:3000/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert('🎉 Đặt hàng thành công! Đơn hàng của bạn đã được gửi tới Admin.');
+                    closeModal();
+                    document.getElementById('orderForm').reset();
+                })
+                .catch(err => alert('Lỗi đặt hàng!'));
+        });
+    </script>
+</body>
+
+</html>

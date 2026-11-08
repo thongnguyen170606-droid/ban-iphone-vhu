@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Hệ Thống - VHU Apple Store</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f4f7f6;
+        }
+        
+        header {
+            background-color: #343a40;
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        
+        .container {
+            padding: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #0071e3;
+            color: white;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            background: #28a745;
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Trang Quản Trị Hệ Thống</h1>
+        <a href="index.html" style="color: white; text-decoration: none; font-weight: bold;">🏠 Quay về Trang chủ</a>
+    </header>
+
+    <div class="container">
+        <h2>Danh Sách Đơn Đặt Hàng</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Tên Khách Hàng</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Địa Chỉ</th>
+                    <th>Sản Phẩm Đặt</th>
+                    <th>Tổng Tiền</th>
+                    <th>Thời Gian</th>
+                    <th>Trạng Thái</th>
+                </tr>
+            </thead>
+            <tbody id="orderList">
+                <tr>
+                    <td colspan="8" style="text-align:center;">Đang tải dữ liệu...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        fetch('http://localhost:3000/api/orders')
+            .then(res => res.json())
+            .then(orders => {
+                const list = document.getElementById('orderList');
+                list.innerHTML = ''; // Xóa chữ Đang tải
+
+                if (orders.length === 0) {
+                    list.innerHTML = '<tr><td colspan="8" style="text-align:center;">Chưa có đơn hàng nào!</td></tr>';
+                    return;
+                }
+
+                orders.forEach(order => {
+                    // Chuyển đổi định dạng tiền và thời gian
+                    let price = new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                    }).format(order.total_price);
+                    let time = new Date(order.created_at).toLocaleString('vi-VN');
+
+                    list.innerHTML += `
+                        <tr>
+                            <td>#${order.id}</td>
+                            <td style="font-weight:bold;">${order.customer_name}</td>
+                            <td>${order.customer_phone}</td>
+                            <td>${order.customer_address}</td>
+                            <td style="color:#0071e3; font-weight:bold;">${order.product_name}</td>
+                            <td style="color:#d70018; font-weight:bold;">${price}</td>
+                            <td>${time}</td>
+                            <td><span class="status">Thành công</span></td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(err => alert("Không thể kết nối đến Máy chủ!"));
+    </script>
+</body>
+
+</html>
